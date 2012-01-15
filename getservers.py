@@ -1,4 +1,12 @@
 #!/usr/bin/python
+#----------+-----------------------------+-----------------------------------------------------
+# id       | integer                     | not null default nextval('player_id_seq'::regclass)
+# name     | character varying(100)      | 
+# time     | timestamp without time zone | not null
+# kills    | integer                     | default 0
+# map      | character varying(30)       | 
+# realtime | timestamp without time zone | not null
+
 import BeautifulSoup
 import urllib
 import re
@@ -6,6 +14,7 @@ import SourceLib
 import time
 import socket
 import struct 
+import psycopg2 
 
 sleeptime = 0.05
 
@@ -88,3 +97,4 @@ for URI in sips:
     print("time    : "+str(Players[i]['time']))
     print("kills/s : "+str(Players[i]['kills']/Players[i]['time']))
     i = i+1
+    
