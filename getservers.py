@@ -66,7 +66,7 @@ def SafeSourceServerPlayersQuery(ip,port):
 
 '''Getting status page source'''
 urllib._urlopener = AppURLopener()
-datasrouce = urllib.urlopen('http://www.game-monitor.com/search.php?used=10&showEmpty=N&location=PL&num=100&game=cstrike2&vars=sv_password=0&game=cstrike2&location=PL&num=100')
+datasource = urllib.urlopen('http://www.game-monitor.com/search.php?used=10&showEmpty=N&location=PL&num=100&game=cstrike2&vars=sv_password=0&game=cstrike2&location=PL&num=100')
 doc = datasource.read()
 soup = BeautifulSoup.BeautifulSoup(doc)
 attrs={ 'class' : 'sip'}
