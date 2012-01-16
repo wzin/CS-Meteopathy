@@ -25,7 +25,11 @@ CREATE TABLE player (
     kills integer DEFAULT 0,
     map character varying(30),
     "time" double precision,
-    realtime double precision
+    realtime double precision,
+    temperature character varying(100),
+    condition character varying(100),
+    humidity character varying(100),
+    pressure character varying(100)
 );
 
 
