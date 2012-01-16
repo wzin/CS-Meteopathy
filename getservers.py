@@ -1,12 +1,4 @@
 #!/usr/bin/python
-#----------+-----------------------------+-----------------------------------------------------
-# id       | integer                     | not null default nextval('player_id_seq'::regclass)
-# name     | character varying(100)      | 
-# time     | timestamp without time zone | not null
-# kills    | integer                     | default 0
-# map      | character varying(30)       | 
-# realtime | timestamp without time zone | not null
-
 import BeautifulSoup
 import urllib
 import re
@@ -17,7 +9,6 @@ import struct
 import psycopg2 
 import string
 import pywapi
-google_result = pywapi.get_weather_from_google('Warsaw,Poland')
 
 sleeptime = 0.1
 conn = psycopg2.connect("dbname=csmeteo user=csmeteo")
