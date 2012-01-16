@@ -15,13 +15,16 @@ import time
 import socket
 import struct 
 import psycopg2 
+import string
+import pywapi
+google_result = pywapi.get_weather_from_google('Warsaw,Poland')
 
 sleeptime = 0.1
 conn = psycopg2.connect("dbname=csmeteo user=csmeteo")
 cur = conn.cursor()
 cur.execute("""set client_encoding to 'latin1'""")
 
-PlayerVector = { 'name' : '', 'time': '', 'kills': '', 'map' : '', 'realtime' : ''}
+PlayerVector = { 'name' : '', 'time': '', 'kills': '', 'map' : '', 'realtime' : '', 'temperature' : '', 'condition' : '', 'humidity' : '' , 'pressure' : '' }
 
 class AppURLopener(urllib.FancyURLopener):
   ''' Setting right User-Agent '''
@@ -65,6 +68,13 @@ def SafeSourceServerPlayersQuery(ip,port):
     return 'None'
 
 '''Getting status page source'''
+google_result = pywapi.get_weather_from_google('Warsaw,Poland')
+yahoo_result = pywapi.get_weather_from_yahoo('PLXX0028', 'metric')
+Temperature=google_result['current_conditions']['temp_c']
+Condition=google_result['current_conditions']['condition']
+Humidity=google_result['current_conditions']['humidity']
+Pressure=yahoo_result['atmosphere']['pressure']
+
 urllib._urlopener = AppURLopener()
 datasource = urllib.urlopen('http://www.game-monitor.com/search.php?used=10&showEmpty=N&location=PL&num=100&game=cstrike2&vars=sv_password=0&game=cstrike2&location=PL&num=100')
 doc = datasource.read()
@@ -72,7 +82,6 @@ soup = BeautifulSoup.BeautifulSoup(doc)
 attrs={ 'class' : 'sip'}
 sips_html = soup.findAll('td', attrs)
 sips = re.findall( r'[0-9]+(?:\.[0-9]+){3}:[0-9]+', str(sips_html)) 
-print('Oto aktualnie maksymalnie zaludnione polskie serwery CSa')
 for URI in sips:
   print("Address: "+URI)
   RealTime = time.time()
@@ -89,12 +98,21 @@ for URI in sips:
   i=0
   while i < len(Players) and Players != 'None':
     i = i+1
-    try:    
-      PlayerVector  =  { 'name' : str(Players[i]['name']) , 'time' : str(Players[i]['time']) , 'kills' : str(Players[i]['kills']) , 'map' : str(Map), 'realtime' : str(RealTime) }
+    try:
+      PlayerVector['name'] = str(Players[i]['name'])
+      PlayerVector['time'] = str(Players[i]['time'])
+      PlayerVector['kills'] = str(Players[i]['kills'])
+      PlayerVector['map'] = str(Map)
+      PlayerVector['realtime'] = str(RealTime)
+      PlayerVector['temperature'] = str(Temperature)
+      PlayerVector['condition'] = str(Condition)
+      PlayerVector['humidity'] = str(Humidity)
+      PlayerVector['pressure'] = str(Pressure)
       print("Vector : " + str(PlayerVector))
-      cur.execute("""INSERT INTO player (name,time,kills,map,realtime) VALUES (%(name)s,%(time)s,%(kills)s,%(map)s,%(realtime)s)""" ,PlayerVector)
+      cur.execute("""INSERT INTO player (name,time,kills,map,realtime,temperature,condition,humidity,pressure) VALUES (%(name)s,%(time)s,%(kills)s,%(map)s,%(realtime)s,%(temperature)s,%(condition)s,%(humidity)s,%(pressure)s)""" ,PlayerVector)
     except IndexError, errormessage:
       print ("Fcuk - didnt add player because :"+str(errormessage))
     except psycopg2.DataError,errormessage:
       print ("Fcuk - didnt add player because :"+str(errormessage))
   conn.commit()
+
