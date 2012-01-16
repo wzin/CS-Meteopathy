@@ -16,14 +16,12 @@ import socket
 import struct 
 import psycopg2 
 
-sleeptime = 0.05
+sleeptime = 0.1
+conn = psycopg2.connect("dbname=csmeteo user=csmeteo")
+cur = conn.cursor()
+cur.execute("""set client_encoding to 'latin1'""")
 
-ServerVector = { 'address' : 'none', 
-                 'name' : 'none', 
-                 'maxplayers' : 'none',
-                 'kills' : 'none',
-                 'serverkdratio' : 'none'}
-PlayerVector = {}
+PlayerVector = { 'name' : '', 'time': '', 'kills': '', 'map' : '', 'realtime' : ''}
 
 class AppURLopener(urllib.FancyURLopener):
   ''' Setting right User-Agent '''
@@ -68,8 +66,8 @@ def SafeSourceServerPlayersQuery(ip,port):
 
 '''Getting status page source'''
 urllib._urlopener = AppURLopener()
-status_page = urllib.urlopen('http://www.game-monitor.com/search.php?used=10&showEmpty=N&location=PL&num=100&game=cstrike2&vars=sv_password=0&game=cstrike2&location=PL&num=100')
-doc = status_page.read()
+datasrouce = urllib.urlopen('http://www.game-monitor.com/search.php?used=10&showEmpty=N&location=PL&num=100&game=cstrike2&vars=sv_password=0&game=cstrike2&location=PL&num=100')
+doc = datasource.read()
 soup = BeautifulSoup.BeautifulSoup(doc)
 attrs={ 'class' : 'sip'}
 sips_html = soup.findAll('td', attrs)
@@ -77,6 +75,7 @@ sips = re.findall( r'[0-9]+(?:\.[0-9]+){3}:[0-9]+', str(sips_html))
 print('Oto aktualnie maksymalnie zaludnione polskie serwery CSa')
 for URI in sips:
   print("Address: "+URI)
+  RealTime = time.time()
   ip,port = URI.split(':')
   query = SourceLib.SourceQuery.SourceQuery(ip, port)
   MaxPlayers=SafeSourceServerQuery(ip,port,'maxplayers')
@@ -88,13 +87,14 @@ for URI in sips:
   Players=SafeSourceServerPlayersQuery(ip, port)
   print (" `MAP : "+str(Map)+", PLAYERS: "+str(NumPlayers)+"/"+str(MaxPlayers))
   i=0
-  print ("  `Players:") 
   while i < len(Players) and Players != 'None':
-    print('    `-'),
-    print("Name:"+str(Players[i]['name']))
-    print('       `-'),
-    print("kills   : "+str(Players[i]['kills']))
-    print("time    : "+str(Players[i]['time']))
-    print("kills/s : "+str(Players[i]['kills']/Players[i]['time']))
     i = i+1
-    
+    try:    
+      PlayerVector  =  { 'name' : str(Players[i]['name']) , 'time' : str(Players[i]['time']) , 'kills' : str(Players[i]['kills']) , 'map' : str(Map), 'realtime' : str(RealTime) }
+      print("Vector : " + str(PlayerVector))
+      cur.execute("""INSERT INTO player (name,time,kills,map,realtime) VALUES (%(name)s,%(time)s,%(kills)s,%(map)s,%(realtime)s)""" ,PlayerVector)
+    except IndexError, errormessage:
+      print ("Fcuk - didnt add player because :"+str(errormessage))
+    except psycopg2.DataError,errormessage:
+      print ("Fcuk - didnt add player because :"+str(errormessage))
+  conn.commit()
